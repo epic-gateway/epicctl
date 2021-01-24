@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "epicctl/cmd"
+import "gitlab.com/acnodal/epicctl/cmd"
 
 func main() {
 	cmd.Execute()
