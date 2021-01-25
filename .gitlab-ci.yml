@@ -1,0 +1,12 @@
+image: golang:latest
+
+before_script:
+  - go get golang.org/x/lint/golint
+
+build:
+  script:
+  - make check build
+
+  artifacts:
+    paths:
+      - epicctl
