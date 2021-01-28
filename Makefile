@@ -21,5 +21,9 @@ run: ## Run the service using "go run"
 	go run ./main.go
 
 .PHONY: build
-build: ## Build the executable
+build: check ## Build the executable
 	go build -o epicctl ./main.go
+
+.PHONY: install
+install: check ## Install the exe to the go bin directory
+	go install
