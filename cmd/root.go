@@ -17,20 +17,22 @@ limitations under the License.
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
-	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile   string
+	k8sConfig string
+)
 
 // rootCmd represents the base command when calledp without any subcommands
 var rootCmd = &cobra.Command{
@@ -58,23 +60,23 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.epicctl.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
+	rootCmd.PersistentFlags().StringVar(&k8sConfig, clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
+
 func getClient() (*kubernetes.Clientset, error) {
-	var kubeconfig *string
-	if home := homeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "$HOME/.kube/config")
-	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	if k8sConfig != "" {
+		loadingRules.Precedence = append(loadingRules.Precedence, k8sConfig)
 	}
-	flag.Parse()
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, nil)
 
 	// use the current context in kubeconfig
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := kubeConfig.ClientConfig()
 	if err != nil {
 		//panic(err.Error())
 		return nil, err
@@ -82,31 +84,9 @@ func getClient() (*kubernetes.Clientset, error) {
 	return kubernetes.NewForConfig(config)
 }
 
-func homeDir() string {
-	if h := os.Getenv("HOME"); h != "" {
-		return h
-	}
-	return os.Getenv("USERPROFILE") // windows
-}
-
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
-	if cfgFile != "" {
-		// Use config file from the flag.
-		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-
-		// Search config in home directory with name ".epicctl" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".epicctl")
-	}
-
+	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
