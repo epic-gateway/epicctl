@@ -75,10 +75,13 @@ func createorg(orgname string) {
 	}
 
 	ns := &v1.Namespace{
-
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        nsid,
 			Annotations: organn,
+			Labels: map[string]string{
+				"app.kubernetes.io/part-of":   "epic",
+				"app.kubernetes.io/component": "organization",
+			},
 		},
 	}
 
