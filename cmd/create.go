@@ -77,7 +77,7 @@ func createOrg(orgname string) {
 		},
 	}
 
-	clientset, err := getClient()
+	clientset, err := getK8sClientSet()
 	if err != nil {
 		panic(err.Error())
 	}

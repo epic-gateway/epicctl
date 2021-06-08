@@ -22,16 +22,23 @@ import (
 	"path"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/client-go/kubernetes"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/spf13/viper"
+	epicv1 "gitlab.com/acnodal/epic/resource-model/api/v1"
 )
 
 var (
 	cfgFile   string
 	k8sConfig string
+	scheme    = runtime.NewScheme()
 )
 
 // rootCmd represents the base command when calledp without any subcommands
@@ -54,6 +61,9 @@ func Execute() {
 }
 
 func init() {
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
+	utilruntime.Must(epicv1.AddToScheme(scheme))
+
 	cobra.OnInitialize(initConfig)
 
 	// Here you will define your flags and configuration settings.
@@ -68,7 +78,26 @@ func init() {
 	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func getClient() (*kubernetes.Clientset, error) {
+func getK8sClientSet() (*kubernetes.Clientset, error) {
+	config, err := getClientConfig()
+	if err != nil {
+		return nil, err
+	}
+	return kubernetes.NewForConfig(config)
+}
+
+func getEpicClient() (client.Client, error) {
+	config, err := getClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return client.New(config, client.Options{
+		Scheme: scheme,
+	})
+}
+
+func getClientConfig() (*rest.Config, error) {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	if k8sConfig != "" {
 		loadingRules.Precedence = append(loadingRules.Precedence, k8sConfig)
@@ -76,12 +105,7 @@ func getClient() (*kubernetes.Clientset, error) {
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, nil)
 
 	// use the current context in kubeconfig
-	config, err := kubeConfig.ClientConfig()
-	if err != nil {
-		//panic(err.Error())
-		return nil, err
-	}
-	return kubernetes.NewForConfig(config)
+	return kubeConfig.ClientConfig()
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -92,6 +116,8 @@ func initConfig() {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	} else {
+		fmt.Printf("%v\n", err)
 	}
 
 }
