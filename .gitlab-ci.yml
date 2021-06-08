@@ -1,7 +1,8 @@
 image: golang:latest
 
 before_script:
-  - go get golang.org/x/lint/golint
+- echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
+- go get golang.org/x/lint/golint
 
 build:
   script:
@@ -9,4 +10,4 @@ build:
 
   artifacts:
     paths:
-      - epicctl
+    - epicctl
