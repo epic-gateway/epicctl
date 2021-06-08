@@ -1,4 +1,4 @@
-module gitlab.com/acnodal/epicctl
+module gitlab.com/acnodal/epic/epicctl
 
 go 1.15
 
