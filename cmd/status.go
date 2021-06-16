@@ -4,44 +4,83 @@ import (
 	"context"
 	"fmt"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "k8s.io/api/core/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/spf13/cobra"
 )
 
-// statusCmd represents the status command
-var statusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "List the number of PODs in the cluster",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		clientset, err := getK8sClientSet()
-		if err != nil {
-			panic(err.Error())
-		}
-		pods, err := clientset.CoreV1().Pods("").List(context.Background(), metav1.ListOptions{})
-		if err != nil {
-			panic(err.Error())
-		}
-		fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
-	},
-}
+const (
+	// A typical EPIC will have 3 pods running in the epic namespace:
+	// api service, controller manager, and node agent.
+	systemPodCount = 3
+)
 
 func init() {
-	rootCmd.AddCommand(statusCmd)
+	rootCmd.AddCommand(&cobra.Command{
+		Use:   "status",
+		Short: "EPIC operational status",
+		Long:  `Queries the EPIC cluster to determine its operational status.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			client, err := getEpicClient()
+			if err != nil {
+				panic(err.Error())
+			}
 
-	// Here you will define your flags and configuration settings.
+			err = status(context.Background(), client)
+			if err != nil {
+				return err
+			}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// statusCmd.PersistentFlags().String("foo", "", "A help for foo")
+			return nil
+		},
+	})
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// statusCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+}
+
+// status determines the overall system status by calling more
+// specific status functions, e.g., systemPodStatus.
+func status(ctx context.Context, cl client.Client) error {
+	var err error
+
+	err = systemPodStatus(ctx, cl)
+	if err != nil {
+		return err
+	}
+
+	err = userPodStatus(ctx, cl)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// systemPodStatus checks the pods that run in the epic namespace.
+func systemPodStatus(ctx context.Context, cl client.Client) error {
+	pods := v1.PodList{}
+	err := cl.List(ctx, &pods, &client.ListOptions{Namespace: "epic"})
+	if err != nil {
+		return err
+	}
+
+	// Do we have the correct number of pods?
+	if len(pods.Items) != systemPodCount {
+		return fmt.Errorf("incorrect system pod count. Should be %d but is %d", systemPodCount, len(pods.Items))
+	}
+
+	// Are all of the pods running?
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != v1.PodRunning {
+			return fmt.Errorf("pod %s is not healthy: %+v", pod.Name, pod.Status.Phase)
+		}
+	}
+	fmt.Println("All EPIC system pods are operational.")
+
+	return nil
+}
+
+func userPodStatus(ctx context.Context, cl client.Client) error {
+
+	return nil
 }
