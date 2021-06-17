@@ -53,6 +53,8 @@ func status(ctx context.Context, cl client.Client) error {
 		return err
 	}
 
+	fmt.Println("No problems found")
+
 	return nil
 }
 
@@ -66,7 +68,7 @@ func systemPodStatus(ctx context.Context, cl client.Client) error {
 
 	// Do we have the correct number of pods?
 	if len(pods.Items) != systemPodCount {
-		return fmt.Errorf("incorrect system pod count. Should be %d but is %d", systemPodCount, len(pods.Items))
+		return fmt.Errorf("incorrect system pod count: should be %d but is %d", systemPodCount, len(pods.Items))
 	}
 
 	// Are all of the pods running?
@@ -75,7 +77,7 @@ func systemPodStatus(ctx context.Context, cl client.Client) error {
 			return fmt.Errorf("pod %s is not healthy: %+v", pod.Name, pod.Status.Phase)
 		}
 	}
-	fmt.Println("All EPIC system pods are operational.")
+	fmt.Println("All EPIC system pods are operational")
 
 	return nil
 }
