@@ -20,6 +20,7 @@ import (
 )
 
 var (
+	debug     bool
 	cfgFile   string
 	k8sConfig string
 	scheme    = runtime.NewScheme()
@@ -48,16 +49,9 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "very verbose output")
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
 	rootCmd.PersistentFlags().StringVar(&k8sConfig, clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
 func getK8sClientSet() (*kubernetes.Clientset, error) {
@@ -95,10 +89,20 @@ func initConfig() {
 	viper.SetConfigFile(cfgFile)
 	viper.AutomaticEnv() // read in environment variables that match
 
+	Debug("Running epicctl\n")
+
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		Debug("Using config file: %s\n", viper.ConfigFileUsed())
 	} else {
-		fmt.Fprintln(os.Stderr, err)
+		Debug("Problem reading config file: %+v\n", err)
+	}
+}
+
+// Debug is like fmt.Printf(os.Stderr...) except it only outputs if
+// the debug command-line flag was set.
+func Debug(format string, kvs ...interface{}) {
+	if debug {
+		fmt.Fprintf(os.Stderr, format, kvs...)
 	}
 }
