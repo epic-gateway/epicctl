@@ -27,7 +27,7 @@ func init() {
 				panic(err.Error())
 			}
 
-			err = status(context.Background(), client)
+			err = status(rootCmd.Context(), client)
 			if err != nil {
 				return err
 			}
