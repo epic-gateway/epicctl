@@ -9,13 +9,13 @@ import (
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create resource",
-	Long:  `Create a resource in EPIC.`,
+	Short: "Creates resources",
+	Long:  `Creates resources in EPIC.`,
 }
 
 var serviceprefixCmd = &cobra.Command{
 	Use:   "serviceprefix",
-	Short: "Create Service Prefix",
+	Short: "Creates Service Prefixes",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -28,7 +28,7 @@ to quickly create a Cobra application.`,
 }
 var lbgCmd = &cobra.Command{
 	Use:   "lbg",
-	Short: "Create Load Balancer Group",
+	Short: "Creates Load Balancer Groups",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -41,7 +41,7 @@ to quickly create a Cobra application.`,
 }
 var envoytemplateCmd = &cobra.Command{
 	Use:   "envoytemplate",
-	Short: "Create Envoy Template",
+	Short: "Creates Envoy Templates",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
