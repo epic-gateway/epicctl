@@ -39,7 +39,10 @@ var rootCmd = &cobra.Command{
 // Execute is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	if err := rootCmd.ExecuteContext(context.Background()); err != nil {
-		panic(err)
+		if debug {
+			panic(err)
+		}
+		os.Exit(1)
 	}
 }
 
