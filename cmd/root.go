@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,26 +21,22 @@ import (
 )
 
 var (
-	debug     bool
-	cfgFile   string
-	k8sConfig string
-	scheme    = runtime.NewScheme()
+	scheme = runtime.NewScheme()
 )
 
 // rootCmd represents the base command when calledp without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "epicctl",
-	Short: "epicctl controls the EPIC cluster",
-	Long:  `epicctl controls the EPIC cluster.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	//	Run: func(cmd *cobra.Command, args []string) { },
+	Short: "epicctl controls EPIC clusters",
+	Long:  `epicctl controls EPIC clusters.`,
 }
 
 // Execute is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
+	Debug("Running epicctl\n")
+
 	if err := rootCmd.ExecuteContext(context.Background()); err != nil {
-		if debug {
+		if viper.GetBool("debug") {
 			panic(err)
 		}
 		os.Exit(1)
@@ -50,11 +47,19 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(epicv1.AddToScheme(scheme))
 
-	cobra.OnInitialize(initConfig)
+	cobra.OnInitialize(readConfigFile)
 
-	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "very verbose output")
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
-	rootCmd.PersistentFlags().StringVar(&k8sConfig, clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
+	rootCmd.PersistentFlags().Bool("debug", false, "enable debug output")
+	rootCmd.PersistentFlags().String("config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
+	rootCmd.PersistentFlags().String(clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
+	viper.BindPFlags(rootCmd.PersistentFlags())
+	viper.BindPFlags(rootCmd.Flags())
+	viper.SetEnvPrefix("EPICCTL")
+	viper.AutomaticEnv()
+	// This lets us name our command-line flags with dashes but have the
+	// environment variables use underscores (e.g., "service-group" and
+	// "SERVICE_GROUP")
+	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 }
 
 func getEpicClient() (client.Client, error) {
@@ -70,7 +75,7 @@ func getEpicClient() (client.Client, error) {
 
 func getClientConfig() (*rest.Config, error) {
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	if k8sConfig != "" {
+	if k8sConfig := viper.GetString(clientcmd.RecommendedConfigPathFlag); k8sConfig != "" {
 		loadingRules.Precedence = append(loadingRules.Precedence, k8sConfig)
 	}
 	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, nil)
@@ -79,25 +84,22 @@ func getClientConfig() (*rest.Config, error) {
 	return kubeConfig.ClientConfig()
 }
 
-// initConfig reads in config file and ENV variables if set.
-func initConfig() {
-	viper.SetConfigFile(cfgFile)
-	viper.AutomaticEnv() // read in environment variables that match
-
-	Debug("Running epicctl\n")
+// readConfigFile reads the config file.
+func readConfigFile() {
+	viper.SetConfigFile(viper.GetString("config"))
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		Debug("Using config file: %s\n", viper.ConfigFileUsed())
+		Debug("Using config file %s\n", viper.ConfigFileUsed())
 	} else {
 		Debug("Problem reading config file: %+v\n", err)
 	}
 }
 
 // Debug is like fmt.Printf(os.Stderr...) except it only outputs if
-// the debug command-line flag was set.
+// the debug flag is set.
 func Debug(format string, kvs ...interface{}) {
-	if debug {
+	if viper.GetBool("debug") {
 		fmt.Fprintf(os.Stderr, format, kvs...)
 	}
 }

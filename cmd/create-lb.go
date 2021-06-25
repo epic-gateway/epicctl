@@ -14,11 +14,6 @@ import (
 )
 
 func init() {
-	var (
-		account      string
-		serviceGroup string
-	)
-
 	createLBCmd := &cobra.Command{
 		Use:     "load-balancer lb-name lb-ports",
 		Aliases: []string{"lb"},
@@ -38,6 +33,11 @@ commas, e.g., TCP/8080,TCP/8888`,
 				return err
 			}
 
+			account, serviceGroup, err := getAccountAndSG()
+			if err != nil {
+				return err
+			}
+
 			epPorts, err := parsePorts(args[1])
 			if err != nil {
 				return err
@@ -45,11 +45,8 @@ commas, e.g., TCP/8080,TCP/8888`,
 			return createLB(rootCmd.Context(), cl, args[0], serviceGroup, account, epPorts)
 		},
 	}
+	bindAccountAndSG(createLBCmd)
 	createCmd.AddCommand(createLBCmd)
-	createLBCmd.Flags().StringVarP(&account, "account", "a", "", "(required) account in which the LB lives")
-	createLBCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "(required) service group to which the LB belongs")
-	createLBCmd.MarkFlagRequired("account")
-	createLBCmd.MarkFlagRequired("service-group")
 }
 
 // createLB creates a LoadBalancer.
@@ -88,7 +85,7 @@ func createLB(ctx context.Context, cl client.Client, lbName string, serviceGroup
 		return err
 	}
 
-	fmt.Fprintf(os.Stderr, "LB %s created successfully\n", lbName)
+	fmt.Fprintf(os.Stderr, "LB %s created\n", lbName)
 
 	return nil
 }

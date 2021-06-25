@@ -12,11 +12,6 @@ import (
 )
 
 func init() {
-	var (
-		account      string
-		serviceGroup string
-	)
-
 	listLBCmd := &cobra.Command{
 		Use:     "load-balancer",
 		Aliases: []string{"lb", "lbs"},
@@ -28,13 +23,15 @@ func init() {
 				return err
 			}
 
+			account, serviceGroup, err := getAccountAndSG()
+			if err != nil {
+				return err
+			}
+
 			return listLB(rootCmd.Context(), cl, serviceGroup, account)
 		},
 	}
-	listLBCmd.Flags().StringVarP(&account, "account", "a", "", "(required) account in which the LB lives")
-	listLBCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "(required) service group to which the LB belongs")
-	listLBCmd.MarkFlagRequired("account")
-	listLBCmd.MarkFlagRequired("service-group")
+	bindAccountAndSG(listLBCmd)
 	listCmd.AddCommand(listLBCmd)
 }
 

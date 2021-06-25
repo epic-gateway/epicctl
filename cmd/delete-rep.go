@@ -12,11 +12,6 @@ import (
 )
 
 func init() {
-	var (
-		account      string
-		serviceGroup string
-	)
-
 	deleteRepCmd := &cobra.Command{
 		Use:     "remoteendpoint lb-name rep-ip rep-port",
 		Aliases: []string{"rep"},
@@ -47,6 +42,11 @@ Three arguments are required:
 				Protocol: servPorts[0].Protocol,
 			}
 
+			account, serviceGroup, err := getAccountAndSG()
+			if err != nil {
+				return err
+			}
+
 			// Connect to the EPIC web service
 			cl, err := getEpicClient()
 			if err != nil {
@@ -56,10 +56,7 @@ Three arguments are required:
 			return deleteRep(rootCmd.Context(), cl, args[0], serviceGroup, account, ip, port)
 		},
 	}
-	deleteRepCmd.Flags().StringVarP(&account, "account", "a", "", "(required) account in which the LB lives")
-	deleteRepCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "(required) service group to which the LB belongs")
-	deleteRepCmd.MarkFlagRequired("account")
-	deleteRepCmd.MarkFlagRequired("service-group")
+	bindAccountAndSG(deleteRepCmd)
 	deleteCmd.AddCommand(deleteRepCmd)
 }
 

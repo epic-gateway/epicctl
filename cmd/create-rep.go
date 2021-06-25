@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/spf13/cobra"
 	corev1 "k8s.io/api/core/v1"
@@ -14,11 +15,6 @@ import (
 )
 
 func init() {
-	var (
-		account      string
-		serviceGroup string
-	)
-
 	createRepCmd := &cobra.Command{
 		Use:     "remoteendpoint lb-name rep-ip rep-port",
 		Aliases: []string{"rep"},
@@ -55,13 +51,15 @@ Three arguments are required:
 				return err
 			}
 
+			account, serviceGroup, err := getAccountAndSG()
+			if err != nil {
+				return err
+			}
+
 			return addRep(rootCmd.Context(), cl, args[0], serviceGroup, account, ip, port)
 		},
 	}
-	createRepCmd.Flags().StringVarP(&account, "account", "a", "", "(required) account in which the LB lives")
-	createRepCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "(required) service group to which the LB belongs")
-	createRepCmd.MarkFlagRequired("account")
-	createRepCmd.MarkFlagRequired("service-group")
+	bindAccountAndSG(createRepCmd)
 	createCmd.AddCommand(createRepCmd)
 }
 
@@ -98,6 +96,8 @@ func addRep(ctx context.Context, cl client.Client, lbName string, serviceGroupNa
 	if err := cl.Create(ctx, &rep); err != nil {
 		return err
 	}
+
+	fmt.Fprintf(os.Stderr, "Endpoint created\n")
 
 	return nil
 }

@@ -10,12 +10,7 @@ import (
 )
 
 func init() {
-	var (
-		account      string
-		serviceGroup string
-	)
-
-	lbDeleteCmd := &cobra.Command{
+	deleteLBCmd := &cobra.Command{
 		Use:     "load-balancer lb-name",
 		Aliases: []string{"lb"},
 		Short:   "Delete load balancer",
@@ -27,14 +22,16 @@ func init() {
 				return err
 			}
 
+			account, serviceGroup, err := getAccountAndSG()
+			if err != nil {
+				return err
+			}
+
 			return deleteLB(context.Background(), cl, args[0], serviceGroup, account)
 		},
 	}
-	lbDeleteCmd.Flags().StringVarP(&account, "account", "a", "", "(required) account in which the LB lives")
-	lbDeleteCmd.Flags().StringVarP(&serviceGroup, "service-group", "g", "", "(required) service group to which the LB belongs")
-	lbDeleteCmd.MarkFlagRequired("account")
-	lbDeleteCmd.MarkFlagRequired("service-group")
-	deleteCmd.AddCommand(lbDeleteCmd)
+	bindAccountAndSG(deleteLBCmd)
+	deleteCmd.AddCommand(deleteLBCmd)
 }
 
 // deleteLB deletes a LoadBalancer.
