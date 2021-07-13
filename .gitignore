@@ -19,3 +19,6 @@ epicctl
 *.swp
 *.swo
 *~
+
+# Generated documentation
+docs/epicctl*.md

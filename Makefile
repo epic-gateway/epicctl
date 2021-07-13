@@ -10,6 +10,10 @@ help: ## Display this help
 
 ##@ Development Goals
 
+.PHONY: clean
+clean: ## Remove build artifacts
+	rm -f docs/epicctl*.md epicctl
+
 .PHONY: check
 check: ## Run some code quality checks
 	go vet ./...
@@ -27,3 +31,7 @@ build: check ## Build the executable
 .PHONY: install
 install: check ## Install the exe to the go bin directory
 	go install
+
+.PHONY: docs
+docs: ## Build documentation
+	go run ./main.go markdown ./docs
