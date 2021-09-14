@@ -82,7 +82,6 @@ func addRep(ctx context.Context, cl client.Client, lbName string, serviceGroupNa
 			Name:      epicv1.RemoteEndpointName(address, port.Port, port.Protocol),
 			Labels: map[string]string{
 				epicv1.OwningLoadBalancerLabel: lb.Name,
-				epicv1.OwningClusterLabel:      clusterName,
 			},
 		},
 		Spec: epicv1.RemoteEndpointSpec{
