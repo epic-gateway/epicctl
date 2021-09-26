@@ -51,9 +51,11 @@ metadata:
   namespace: purelb
 spec:
   epic:
-    url: https://{{.host}}/api/epic/accounts/{{.namespace}}/groups/{{.lbsg}}
-    ws-username: {{.user}}
-    ws-password: {{.password}}
+    api-service-hostname: {{.host}}
+    api-service-username: {{.user}}
+    api-service-password: {{.password}}
+    user-namespace: {{.namespace}}
+    lbservicegroup: {{.lbsg}}
 `)
 	if err != nil {
 		return err
