@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/crypto/bcrypt"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/kubectl/pkg/generate/versioned"
@@ -17,7 +15,7 @@ import (
 const (
 	gitlabSecretName       = "gitlab"
 	gitlabRegistryHostname = "registry.gitlab.com"
-	contourSecretName      = "password"
+	contourSecretName      = "api-users"
 	contourRealmName       = "epicauth"
 )
 
@@ -25,7 +23,7 @@ func init() {
 	// Set up the user-namespace command and hook it into its parent,
 	// the create command.
 	createCmd.AddCommand(&cobra.Command{
-		Use:     "user-namespace name registry-user registry-password ws-user ws-password",
+		Use:     "user-namespace name registry-user registry-password",
 		Short:   "Create User Namespace",
 		Aliases: []string{"ns", "user-ns"},
 		Long: `Create an EPIC User Namespace.
@@ -36,14 +34,14 @@ team are configured and managed within a User Namespace.
 This command creates a User Namespace. The name can contain only
 alphanumeric characters and the dash "-". Contact Acnodal support
 for your registry-user and registry-password.`,
-		Args: cobra.ExactArgs(5),
+		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			client, err := getEpicClient()
 			if err != nil {
 				panic(err.Error())
 			}
 
-			return createUserNamespace(context.Background(), client, args[0], args[1], args[2], args[3], args[4])
+			return createUserNamespace(context.Background(), client, args[0], args[1], args[2])
 		},
 	})
 }
@@ -53,7 +51,7 @@ for your registry-user and registry-password.`,
 // infratructure for various purposes. This sets up the minimal
 // infrastructure that's always needed like an Account CR and the
 // various secrets needed for Docker and Contour.
-func createUserNamespace(ctx context.Context, cl client.Client, orgName string, registryUserName string, registryPassword string, wsUserName string, wsPassword string) error {
+func createUserNamespace(ctx context.Context, cl client.Client, orgName string, registryUserName string, registryPassword string) error {
 
 	nsName := epicv1.AccountNamespace(orgName)
 
@@ -91,10 +89,7 @@ func createUserNamespace(ctx context.Context, cl client.Client, orgName string, 
 		return err
 	}
 
-	// Contour (EPIC's web service authn proxy) looks for credentials in
-	// a "password" secret in the user NS so we need to add this NS's WS
-	// credentials to a secret in this NS.
-	pwObj, err := contourSecret(contourSecretName, nsName, contourRealmName, wsUserName, wsPassword)
+	pwObj, err := contourSecret(contourSecretName, nsName, contourRealmName)
 	if err != nil {
 		return err
 	}
@@ -123,8 +118,7 @@ func dockerSecret(name string, ns string, host string, user string, password str
 	return *secret, nil
 }
 
-// contourSecret generates a Contour-compatible k8s Secret.
-func contourSecret(name string, ns string, realm string, user string, password string) (v1.Secret, error) {
+func contourSecret(name string, ns string, realm string) (v1.Secret, error) {
 	pwObj := v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -135,12 +129,9 @@ func contourSecret(name string, ns string, realm string, user string, password s
 			},
 		},
 	}
-	pwBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return pwObj, err
-	}
+
 	pwObj.Data = map[string][]byte{
-		"auth": []byte(fmt.Sprintf("%s:%s", user, string(pwBytes))),
+		"auth": []byte(""),
 	}
 
 	return pwObj, nil
