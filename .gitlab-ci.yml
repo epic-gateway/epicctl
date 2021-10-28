@@ -2,7 +2,6 @@ image: golang:1.15.13-buster
 
 before_script:
 - echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
-- go get golang.org/x/lint/golint
 
 build:
   script:
