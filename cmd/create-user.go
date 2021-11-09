@@ -69,6 +69,7 @@ func createAPIUser(ctx context.Context, cl client.Client, apiUser string, accoun
 	if err != nil {
 		panic(err.Error())
 	}
+	fmt.Println("")
 
 	pass1 := string(bytepw)
 	pass2 := string(bytepw2)
