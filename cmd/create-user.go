@@ -53,7 +53,7 @@ func createAPIUser(ctx context.Context, cl client.Client, apiUser string, accoun
 	for _, s := range apiusernames {
 		user := s[:strings.IndexByte(s, ':')]
 		if user == apiUser {
-			return fmt.Errorf("api-user %s exists", accountName)
+			return fmt.Errorf("api-user %s exists", apiUser)
 		}
 
 	}
