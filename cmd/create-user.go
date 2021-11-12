@@ -59,20 +59,17 @@ func createAPIUser(ctx context.Context, cl client.Client, apiUser string, accoun
 	}
 
 	fmt.Print("New Password:  ")
-	bytepw, err := term.ReadPassword(int(syscall.Stdin))
+	pass1, err := readPassword()
 	if err != nil {
 		panic(err.Error())
 	}
 
 	fmt.Print("\nRetype New Password:  ")
-	bytepw2, err := term.ReadPassword(int(syscall.Stdin))
+	pass2, err := readPassword()
 	if err != nil {
 		panic(err.Error())
 	}
 	fmt.Println("")
-
-	pass1 := string(bytepw)
-	pass2 := string(bytepw2)
 
 	if len(pass1) < 6 {
 		fmt.Println("minimum password length 6 characters")
@@ -84,7 +81,7 @@ func createAPIUser(ctx context.Context, cl client.Client, apiUser string, accoun
 		os.Exit(1)
 	}
 
-	pwBytes, _ := bcrypt.GenerateFromPassword([]byte(bytepw2), bcrypt.DefaultCost)
+	pwBytes, _ := bcrypt.GenerateFromPassword([]byte(pass2), bcrypt.DefaultCost)
 
 	newapiuser := fmt.Sprintf("%s:%s\n", apiUser, string(pwBytes))
 
@@ -99,4 +96,26 @@ func createAPIUser(ctx context.Context, cl client.Client, apiUser string, accoun
 	fmt.Printf("api-user %s in user-namespace %s created\n", apiUser, accountName)
 
 	return nil
+}
+
+// Reads a password from stdin. If stdin is a terminal then it uses
+// term.ReadPassword so the terminal doesn't echo the password.  If
+// stdin isn't a terminal (e.g., stdin has been redirected) then it
+// just scans.
+func readPassword() (string, error) {
+	var (
+		pw    string
+		err   error
+		stdin int = int(syscall.Stdin)
+	)
+
+	if term.IsTerminal(stdin) {
+		var bytepw []byte
+		bytepw, err = term.ReadPassword(stdin)
+		pw = string(bytepw)
+	} else {
+		_, err = fmt.Scanln(&pw)
+	}
+
+	return pw, err
 }
