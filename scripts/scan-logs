@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+if [ $# -lt 1 ]
+then
+    echo "usage: $0 user-namespace"
+    echo
+    echo "  $0 scans for errors in the logs of EPIC pods"
+    exit 1
+fi
+
+USERNS="$1"
+
+# EPIC system pods
+for pod in `kubectl get pods --namespace=epic --output=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'`
+do
+    kubectl logs --namespace=epic $pod --all-containers | grep -i error || true
+done
+
+# Marin3r system pods
+for pod in `kubectl get pods --namespace=marin3r-system --output=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'`
+do
+    kubectl logs "--namespace=marin3r-system" $pod --all-containers | grep -i error --with-filename "--label=$pod" || true
+done
+
+# Pods in the user namespace
+for pod in `kubectl get pods "--namespace=$USERNS" --output=jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'`
+do
+    kubectl logs "--namespace=$USERNS" $pod --all-containers | grep -i error || true
+done
