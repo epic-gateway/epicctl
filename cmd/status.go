@@ -10,12 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	// A typical EPIC will have 3 pods running in the epic namespace:
-	// api service, controller manager, and node agent.
-	systemPodCount = 3
-)
-
 func init() {
 	rootCmd.AddCommand(&cobra.Command{
 		Use:   "status",
@@ -43,7 +37,7 @@ func init() {
 func status(ctx context.Context, cl client.Client) error {
 	var err error
 
-	err = systemPodStatus(ctx, cl)
+	err = epicPodStatus(ctx, cl)
 	if err != nil {
 		return err
 	}
@@ -58,31 +52,59 @@ func status(ctx context.Context, cl client.Client) error {
 	return nil
 }
 
-// systemPodStatus checks the pods that run in the epic namespace.
-func systemPodStatus(ctx context.Context, cl client.Client) error {
+// epicPodStatus checks the pods that run in the epic namespace.
+func epicPodStatus(ctx context.Context, cl client.Client) error {
+	nodes := v1.NodeList{}
+	err := cl.List(ctx, &nodes)
+
 	pods := v1.PodList{}
-	err := cl.List(ctx, &pods, &client.ListOptions{Namespace: "epic"})
+	err = cl.List(ctx, &pods, &client.ListOptions{Namespace: "epic"})
 	if err != nil {
 		return err
 	}
 
-	// Do we have the correct number of pods?
-	if len(pods.Items) != systemPodCount {
-		return fmt.Errorf("incorrect system pod count: should be %d but is %d", systemPodCount, len(pods.Items))
+	// Do we have the correct number of EPIC pods?
+	if err = epicPodCount(&nodes, &pods); err != nil {
+		return err
 	}
 
 	// Are all of the pods running?
-	for _, pod := range pods.Items {
-		if pod.Status.Phase != v1.PodRunning {
-			return fmt.Errorf("pod %s is not healthy: %+v", pod.Name, pod.Status.Phase)
-		}
+	err = podStatus(ctx, cl, &nodes, &pods)
+	if err != nil {
+		return err
 	}
 	fmt.Println("All EPIC system pods are operational")
 
 	return nil
 }
 
+// epicPodCount validates that the correct number of pods are running
+// in the epic namespace.
+func epicPodCount(nodes *v1.NodeList, pods *v1.PodList) error {
+	// The count should be the sum of the agent daemonset + the web
+	// service + the controller-manager
+	desiredCount := len(nodes.Items) + 2
+
+	if len(pods.Items) != desiredCount {
+		return fmt.Errorf("incorrect system pod count: should be %d but is %d", desiredCount, len(pods.Items))
+	}
+
+	return nil
+}
+
 func userPodStatus(ctx context.Context, cl client.Client) error {
+
+	return nil
+}
+
+// podStatus checks the pods that run in the epic namespace.
+func podStatus(ctx context.Context, cl client.Client, nodes *v1.NodeList, pods *v1.PodList) error {
+	// Are all of the pods running?
+	for _, pod := range pods.Items {
+		if pod.Status.Phase != v1.PodRunning {
+			return fmt.Errorf("pod %s is not healthy: %+v", pod.Name, pod.Status.Phase)
+		}
+	}
 
 	return nil
 }
