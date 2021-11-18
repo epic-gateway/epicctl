@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	epicv1 "gitlab.com/acnodal/epic/resource-model/api/v1"
@@ -16,26 +18,32 @@ func init() {
 		Short:   "Delete load balancer",
 		Long:    `Delete an EPIC load balancer.`,
 		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			cl, err := getEpicClient()
 			if err != nil {
-				return err
+				fmt.Printf("%s\n", err.Error())
+				return
 			}
 
 			account, serviceGroup, err := getAccountAndSG()
 			if err != nil {
-				return err
+				fmt.Printf("%s\n", err.Error())
+				return
 			}
 
-			return deleteLB(context.Background(), cl, args[0], serviceGroup, account)
+			if err := deleteLB(context.Background(), cl, args[0], serviceGroup, account, viper.GetBool("force")); err != nil {
+				fmt.Printf("%s\n", err.Error())
+			}
 		},
 	}
 	bindAccountAndSG(deleteLBCmd)
+	deleteLBCmd.Flags().Bool("force", false, "DANGER: Unconditionally delete the LB")
+	viper.BindPFlag("force", deleteLBCmd.Flags().Lookup("force"))
 	deleteCmd.AddCommand(deleteLBCmd)
 }
 
 // deleteLB deletes a LoadBalancer.
-func deleteLB(ctx context.Context, cl client.Client, lbName string, serviceGroupName string, accountName string) error {
+func deleteLB(ctx context.Context, cl client.Client, lbName string, serviceGroupName string, accountName string, force bool) error {
 	var (
 		err error
 		lb  epicv1.LoadBalancer
@@ -46,9 +54,15 @@ func deleteLB(ctx context.Context, cl client.Client, lbName string, serviceGroup
 		return err
 	}
 
-	// Remove our upstream cluster from the LB
-	if err = lb.RemoveUpstream(clusterName); err != nil {
-		return err
+	if force {
+		// If we've been told to force-delete the LB then blow away all of
+		// the upstream clusters
+		lb.Spec.UpstreamClusters = []string{}
+	} else {
+		// attempt to delete just the cluster that this tool uses
+		if err = lb.RemoveUpstream(clusterName); err != nil {
+			return err
+		}
 	}
 	if err = cl.Update(ctx, &lb); err != nil {
 		return err
