@@ -13,7 +13,7 @@ import (
 
 func init() {
 	deleteRepCmd := &cobra.Command{
-		Use:     "remoteendpoint lb-name rep-ip rep-port",
+		Use:     "remoteendpoint lb-name rep-ip rep-port user-namespace service-group",
 		Aliases: []string{"rep"},
 		Short:   "Deletes ad-hoc remote endpoints",
 		Long: `Deletes ad-hoc (i.e., non TrueIngress) remote endpoints.
@@ -22,9 +22,11 @@ Three arguments are required:
  - the load balancer name
  - the remote endpoint IP address
  - the remote endpoint port
-   the port is a protocol and number, e.g., TCP/8080 or UDP/123.
+   the port is a protocol and number, e.g., TCP/8080 or UDP/123
+ - the user namespace
+ - the service group to which the load balancer belongs.
 `,
-		Args: cobra.ExactArgs(3),
+		Args: cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Parse the IP address
 			ip := net.ParseIP(args[1])
@@ -42,10 +44,8 @@ Three arguments are required:
 				Protocol: servPorts[0].Protocol,
 			}
 
-			account, serviceGroup, err := getAccountAndSG()
-			if err != nil {
-				return err
-			}
+			account := args[3]
+			serviceGroup := args[4]
 
 			// Connect to the EPIC web service
 			cl, err := getEpicClient()
@@ -56,7 +56,6 @@ Three arguments are required:
 			return deleteRep(rootCmd.Context(), cl, args[0], serviceGroup, account, ip, port)
 		},
 	}
-	bindAccountAndSG(deleteRepCmd)
 	deleteCmd.AddCommand(deleteRepCmd)
 }
 

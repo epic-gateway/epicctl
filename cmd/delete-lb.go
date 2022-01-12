@@ -13,11 +13,11 @@ import (
 
 func init() {
 	deleteLBCmd := &cobra.Command{
-		Use:     "load-balancer lb-name",
+		Use:     "load-balancer lb-name user-namespace service-group",
 		Aliases: []string{"lb"},
 		Short:   "Delete load balancer",
 		Long:    `Delete an EPIC load balancer.`,
-		Args:    cobra.ExactArgs(1),
+		Args:    cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			cl, err := getEpicClient()
 			if err != nil {
@@ -25,18 +25,14 @@ func init() {
 				return
 			}
 
-			account, serviceGroup, err := getAccountAndSG()
-			if err != nil {
-				fmt.Printf("%s\n", err.Error())
-				return
-			}
+			account := args[1]
+			serviceGroup := args[2]
 
 			if err := deleteLB(context.Background(), cl, args[0], serviceGroup, account, viper.GetBool("force")); err != nil {
 				fmt.Printf("%s\n", err.Error())
 			}
 		},
 	}
-	bindAccountAndSG(deleteLBCmd)
 	deleteLBCmd.Flags().Bool("force", false, "DANGER: Unconditionally delete the LB")
 	viper.BindPFlag("force", deleteLBCmd.Flags().Lookup("force"))
 	deleteCmd.AddCommand(deleteLBCmd)

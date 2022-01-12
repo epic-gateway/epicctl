@@ -2,12 +2,9 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -72,27 +69,4 @@ func getReps(ctx context.Context, cl client.Client, lbName string, serviceGroupN
 	list := epicv1.RemoteEndpointList{}
 	err := cl.List(ctx, &list, &listOps)
 	return list, err
-}
-
-// Many of our LB commands require an account arg and a ServiceGroup
-// arg so they can share this code.
-func bindAccountAndSG(cmd *cobra.Command) {
-	cmd.Flags().StringP("account", "a", "", "(required) account in which the LB lives")
-	viper.BindPFlag("account", cmd.Flags().Lookup("account"))
-	cmd.Flags().StringP("service-group", "g", "", "(required) service group to which the LB belongs")
-	viper.BindPFlag("service-group", cmd.Flags().Lookup("service-group"))
-}
-
-func getAccountAndSG() (account string, serviceGroup string, err error) {
-	account = viper.GetString("account")
-	if account == "" {
-		return account, "", fmt.Errorf("account is required but wasn't provided")
-	}
-
-	serviceGroup = viper.GetString("service-group")
-	if serviceGroup == "" {
-		return account, serviceGroup, fmt.Errorf("service-group is required but wasn't provided")
-	}
-
-	return account, serviceGroup, nil
 }

@@ -13,25 +13,23 @@ import (
 
 func init() {
 	getLBCmd := &cobra.Command{
-		Use:     "load-balancer",
+		Use:     "load-balancer user-namespace service-group",
 		Aliases: []string{"lb", "lbs"},
 		Short:   "Get load balancers",
-		Long:    `Get EPIC load balancers in the provided account and service group.`,
+		Long:    `Get EPIC load balancers in the provided user namespace and service group.`,
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cl, err := getEpicClient()
 			if err != nil {
 				return err
 			}
 
-			account, serviceGroup, err := getAccountAndSG()
-			if err != nil {
-				return err
-			}
+			account := args[0]
+			serviceGroup := args[1]
 
 			return getLBlist(rootCmd.Context(), cl, serviceGroup, account)
 		},
 	}
-	bindAccountAndSG(getLBCmd)
 	getCmd.AddCommand(getLBCmd)
 }
 

@@ -15,28 +15,27 @@ import (
 
 func init() {
 	createLBCmd := &cobra.Command{
-		Use:     "load-balancer lb-name lb-ports",
+		Use:     "load-balancer lb-name lb-ports user-namespace service-group",
 		Aliases: []string{"lb"},
 		Short:   "Create load balancer",
 		Long: `Create a new ad-hoc EPIC load balancer.
 
-Two arguments are required: the load balancer name,
-and a list of ports on which the load balancer will
-listen. Each port is a protocol and number, e.g.,
-TCP/8080 or UDP/123. If the load balancer listens
+Four arguments are required: the load balancer name,
+a list of ports on which the load balancer will
+listen (each port is a protocol and number, e.g.,
+TCP/8080 or UDP/123; if the load balancer listens
 on more than one port they must be separated with
-commas, e.g., TCP/8080,TCP/8888`,
-		Args: cobra.ExactArgs(2),
+commas, e.g., TCP/8080,TCP/8888), the user namespace,
+and the service group.`,
+		Args: cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cl, err := getEpicClient()
 			if err != nil {
 				return err
 			}
 
-			account, serviceGroup, err := getAccountAndSG()
-			if err != nil {
-				return err
-			}
+			account := args[2]
+			serviceGroup := args[3]
 
 			epPorts, err := parsePorts(args[1])
 			if err != nil {
@@ -45,7 +44,6 @@ commas, e.g., TCP/8080,TCP/8888`,
 			return createLB(rootCmd.Context(), cl, args[0], serviceGroup, account, epPorts)
 		},
 	}
-	bindAccountAndSG(createLBCmd)
 	createCmd.AddCommand(createLBCmd)
 }
 
