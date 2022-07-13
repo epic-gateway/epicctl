@@ -24,7 +24,7 @@ var (
 	scheme = runtime.NewScheme()
 )
 
-// rootCmd represents the base command when calledp without any subcommands
+// rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "epicctl",
 	Short: "epicctl controls EPIC clusters",
