@@ -20,8 +20,8 @@ check: ## Run some code quality checks
 	go test -race -short ./...
 
 .PHONY: run
-run: ## Run the service using "go run"
-	go run ./main.go
+run: ## Run the service using "go run". Use the ARGS env var to pass params into go run.
+	go run ./main.go ${ARGS}
 
 .PHONY: build
 build: check ## Build the executable
