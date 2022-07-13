@@ -16,7 +16,7 @@ func init() {
 		Short: "EPIC operational status",
 		Long:  `Queries the EPIC cluster to determine its operational status.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := getEpicClient()
+			client, err := getCRClient()
 			if err != nil {
 				panic(err.Error())
 			}

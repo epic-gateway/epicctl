@@ -20,28 +20,26 @@ func init() {
 		Long:    `Get api-users in a specified user namespace`,
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cl, err := getEpicClient()
+			cl, err := getCRClient()
 			if err != nil {
 				return err
 			}
 
-			return getAPIUser(rootCmd.Context(), cl, args[0])
+			fmt.Printf("EPIC API Users in User Namespace %s\n", args[0])
+			return listAPIUsers(rootCmd.Context(), cl, args[0])
 		},
 	})
 }
 
-// getAPIUser extracts and the api-usernames from the api-users secret it the
-// user namespace
-
-func getAPIUser(ctx context.Context, cl client.Client, accountName string) error {
+// listAPIUsers extracts and prints the api-usernames from the
+// api-users secret in the user namespace.
+func listAPIUsers(ctx context.Context, cl client.Client, accountName string) error {
 
 	secret := v1.Secret{}
 	err := cl.Get(ctx, client.ObjectKey{Namespace: epicv1.AccountNamespace(accountName), Name: contourSecretName}, &secret)
 	if err != nil {
 		return fmt.Errorf("user namespace %s not found", accountName)
 	}
-
-	fmt.Printf("EPIC API Users in User Namespace %s\n", accountName)
 
 	httppasswd := string(secret.Data["auth"])
 

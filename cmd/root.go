@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/kubernetes"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -62,7 +63,8 @@ func init() {
 	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 }
 
-func getEpicClient() (client.Client, error) {
+// getCRClient creates a new Controller Runtime client.Client.
+func getCRClient() (client.Client, error) {
 	config, err := getClientConfig()
 	if err != nil {
 		return nil, err
@@ -71,6 +73,16 @@ func getEpicClient() (client.Client, error) {
 	return client.New(config, client.Options{
 		Scheme: scheme,
 	})
+}
+
+// getGoClientset creates a new client-go Clientset.
+func getGoClientset() (*kubernetes.Clientset, error) {
+	config, err := getClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	return kubernetes.NewForConfig(config)
 }
 
 func getClientConfig() (*rest.Config, error) {

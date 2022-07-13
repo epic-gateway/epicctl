@@ -25,7 +25,7 @@ func init() {
 		Long:    `Create api-user username in a specified user namespace`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cl, err := getEpicClient()
+			cl, err := getCRClient()
 			if err != nil {
 				return err
 			}

@@ -36,7 +36,7 @@ alphanumeric characters and the dash "-". Contact Acnodal support
 for your registry-user and registry-password.`,
 		Args: cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			client, err := getEpicClient()
+			client, err := getCRClient()
 			if err != nil {
 				panic(err.Error())
 			}
