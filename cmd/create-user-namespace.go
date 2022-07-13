@@ -6,9 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/kubectl/pkg/generate/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
+	"gitlab.com/acnodal/epic/epicctl/internal/versioned"
 	epicv1 "gitlab.com/acnodal/epic/resource-model/api/v1"
 )
 
