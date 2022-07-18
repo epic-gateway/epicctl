@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,8 +35,6 @@ var rootCmd = &cobra.Command{
 
 // Execute is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
-	Debug("Running epicctl\n")
-
 	if err := rootCmd.ExecuteContext(context.Background()); err != nil {
 		if viper.GetBool("debug") {
 			panic(err)
@@ -48,13 +47,13 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(epicv1.AddToScheme(scheme))
 
+	cobra.OnInitialize(debugVersion)
 	cobra.OnInitialize(readConfigFile)
 
 	rootCmd.PersistentFlags().Bool("debug", false, "enable debug output")
 	rootCmd.PersistentFlags().String("config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
 	rootCmd.PersistentFlags().String(clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
 	viper.BindPFlags(rootCmd.PersistentFlags())
-	viper.BindPFlags(rootCmd.Flags())
 	viper.SetEnvPrefix("EPICCTL")
 	viper.AutomaticEnv()
 	// This lets us name our command-line flags with dashes but have the
@@ -106,6 +105,18 @@ func readConfigFile() {
 	} else {
 		Debug("Problem reading config file: %+v\n", err)
 	}
+}
+
+func debugVersion() {
+	Debug("Running epicctl")
+	if info, ok := debug.ReadBuildInfo(); ok {
+		for _, setting := range info.Settings {
+			if "vcs.revision" == setting.Key {
+				Debug(" (%s: %s)", setting.Key, setting.Value)
+			}
+		}
+	}
+	Debug("\n")
 }
 
 // Debug is like fmt.Printf(os.Stderr...) except it only outputs if
