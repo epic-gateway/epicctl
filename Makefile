@@ -25,7 +25,7 @@ run: ## Run the service using "go run". Use the ARGS env var to pass params into
 
 .PHONY: build
 build: check ## Build the executable
-	CGO_ENABLED=0 go build -o epicctl ./main.go
+	CGO_ENABLED=0 go build -o epicctl .
 
 .PHONY: install
 install: check ## Install the exe to the go bin directory

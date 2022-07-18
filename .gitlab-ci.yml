@@ -1,4 +1,4 @@
-image: golang:1.17.2-buster
+image: golang:1.18.4-bullseye
 
 before_script:
 - echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" > ~/.netrc
