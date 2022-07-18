@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"runtime/debug"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -105,18 +104,6 @@ func readConfigFile() {
 	} else {
 		Debug("Problem reading config file: %+v\n", err)
 	}
-}
-
-func debugVersion() {
-	Debug("Running epicctl")
-	if info, ok := debug.ReadBuildInfo(); ok {
-		for _, setting := range info.Settings {
-			if "vcs.revision" == setting.Key {
-				Debug(" (%s: %s)", setting.Key, setting.Value)
-			}
-		}
-	}
-	Debug("\n")
 }
 
 // Debug is like fmt.Printf(os.Stderr...) except it only outputs if
