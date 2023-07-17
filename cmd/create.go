@@ -4,6 +4,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var accountName string
+
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
@@ -12,5 +14,6 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
+	createCmd.PersistentFlags().StringVar(&accountName, "account-name", "root", "name of the user account")
 	rootCmd.AddCommand(createCmd)
 }
