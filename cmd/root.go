@@ -23,13 +23,17 @@ import (
 
 var (
 	scheme = runtime.NewScheme()
+
+	// version is set by the build process.
+	version string = "development"
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "epicctl",
-	Short: "epicctl controls EPIC clusters",
-	Long:  `epicctl controls EPIC clusters.`,
+	Use:     "epicctl",
+	Short:   "epicctl controls EPIC",
+	Long:    `epicctl controls EPIC.`,
+	Version: version,
 }
 
 // Execute is called by main.main(). It only needs to happen once to the rootCmd.
@@ -46,9 +50,10 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(epicv1.AddToScheme(scheme))
 
-	cobra.OnInitialize(debugVersion)
 	cobra.OnInitialize(readConfigFile)
 
+	rootCmd.SetVersionTemplate(`{{with .Name}}{{printf "%s " .}}{{end}}{{printf "version: %s" .Version}}
+`)
 	rootCmd.PersistentFlags().Bool("debug", false, "enable debug output")
 	rootCmd.PersistentFlags().String("config", path.Join(homedir.HomeDir(), ".epicctl.yaml"), "epicctl config file")
 	rootCmd.PersistentFlags().String(clientcmd.RecommendedConfigPathFlag, clientcmd.RecommendedHomeFile, "k8s config file")
