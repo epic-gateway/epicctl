@@ -23,7 +23,7 @@ var (
 	hostPort       int32
 	clusterName    string
 	createAdhocCmd = cobra.Command{
-		Use:     "ad-hoc-endpoint cluster-name address port",
+		Use:     "ad-hoc-endpoint address port",
 		Short:   "Create ad-hoc endpoint",
 		Aliases: []string{"ad-hoc"},
 		Long: `Create an ad-hoc EPIC endpoint.
@@ -92,9 +92,9 @@ func createAdHocEndpoint(ctx context.Context, cl crclient.Client, groupName stri
 	slice := epicv1.GWEndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      hostName,
-			Namespace: "epic-" + groupName,
+			Namespace: epicv1.AccountNamespace(groupName),
 			Labels: map[string]string{
-				"epic.acnodal.io/owning-account": groupName,
+				epicv1.OwningAccountLabel: groupName,
 			},
 		},
 		Spec: epicv1.GWEndpointSliceSpec{
