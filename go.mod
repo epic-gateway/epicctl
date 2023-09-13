@@ -1,12 +1,12 @@
-module gitlab.com/acnodal/epic/epicctl
+module epic-gateway.org/epicctl
 
 go 1.18
 
 require (
+	epic-gateway.org/resource-model v0.55.6
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.8.1
-	gitlab.com/acnodal/epic/resource-model v0.45.3
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211
 	k8s.io/api v0.24.2
@@ -15,6 +15,7 @@ require (
 	k8s.io/kubectl v0.24.2
 	k8s.io/utils v0.0.0-20220713171938-56c0de1e6f5e
 	sigs.k8s.io/controller-runtime v0.12.3
+	sigs.k8s.io/gateway-api v0.5.1
 )
 
 require (
@@ -90,7 +91,6 @@ require (
 	k8s.io/component-base v0.24.2 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
-	sigs.k8s.io/gateway-api v0.5.0-rc1 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

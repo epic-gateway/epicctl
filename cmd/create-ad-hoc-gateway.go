@@ -11,7 +11,7 @@ import (
 	crclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/gateway-api/apis/v1alpha2"
 
-	epicv1 "gitlab.com/acnodal/epic/resource-model/api/v1"
+	epicv1 "epic-gateway.org/resource-model/api/v1"
 )
 
 func init() {
@@ -113,7 +113,7 @@ func createAdHocGateway(ctx context.Context, cl crclient.Client, account string,
 			},
 		},
 		Spec: epicv1.GWRouteSpec{
-			HTTP: v1alpha2.HTTPRouteSpec{
+			HTTP: &v1alpha2.HTTPRouteSpec{
 				CommonRouteSpec: v1alpha2.CommonRouteSpec{
 					ParentRefs: []v1alpha2.ParentReference{{
 						Name: v1alpha2.ObjectName(name), // Link the Route to the Proxy

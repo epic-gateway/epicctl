@@ -1,6 +1,6 @@
 package main
 
-import "gitlab.com/acnodal/epic/epicctl/cmd"
+import "epic-gateway.org/epicctl/cmd"
 
 func main() {
 	cmd.Execute()

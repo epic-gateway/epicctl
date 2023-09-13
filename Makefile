@@ -26,7 +26,7 @@ run: ## Run the service using "go run". Use the ARGS env var to pass params into
 
 .PHONY: build
 build: check ## Build the executable
-	CGO_ENABLED=0 go build -ldflags "-X gitlab.com/acnodal/epic/epicctl/cmd.version=${SUFFIX}" -o epicctl .
+	CGO_ENABLED=0 go build -ldflags "-X epic-gateway.org/epicctl/cmd.version=${SUFFIX}" -o epicctl .
 
 .PHONY: install
 install: check ## Install the exe to the go bin directory

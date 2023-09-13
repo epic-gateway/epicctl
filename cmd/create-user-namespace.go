@@ -8,8 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"gitlab.com/acnodal/epic/epicctl/internal/versioned"
-	epicv1 "gitlab.com/acnodal/epic/resource-model/api/v1"
+	"epic-gateway.org/epicctl/internal/versioned"
+
+	epicv1 "epic-gateway.org/resource-model/api/v1"
 )
 
 const (

@@ -1,0 +1,35 @@
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-go@v4
+      with: {go-version: '=1.19.8'}
+
+    - name: Decide what we're going to call this
+      run: |
+        TAG_SPECIFIC=${{ github.ref_name }}
+        # if we're building from a branch (i.e., not a tag) then add
+        # the short sha so we can have more than one build per branch
+        if [[ ${{ github.ref }} != refs/tags/* ]]; then
+          TAG_SPECIFIC=${TAG_SPECIFIC}-$(git rev-parse --short HEAD)
+        fi
+        echo $TAG_SPECIFIC
+        echo "TAG_SPECIFIC=$TAG_SPECIFIC" >> $GITHUB_ENV
+
+    - name: Make
+      run: |
+        make SUFFIX=${TAG_SPECIFIC} check build
+
+    - name: Create a new pre-release
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        files: |
+          epicctl
+          scripts/scan-logs
