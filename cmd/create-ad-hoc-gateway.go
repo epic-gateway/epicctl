@@ -54,7 +54,7 @@ Arguments:
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&serviceGroup, "service-group", "gatewayhttps", "the service group to which the Gateway will belong")
+	cmd.Flags().StringVar(&serviceGroup, "service-group", "gatewayhttp", "the service group to which the Gateway will belong")
 	createCmd.AddCommand(&cmd)
 }
 
